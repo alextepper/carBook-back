@@ -1,8 +1,6 @@
-const { body, validationResult } = require("express-validator");
+const { body } = require("express-validator");
 const User = require("../../model/User");
 const validatorResult = require("../../middlwares/validatorMiddlwares");
-const bcrypt = require("bcrypt");
-const apiError = require("./../apiError");
 
 exports.signupValidator = [
   body("firstname")
@@ -12,7 +10,7 @@ exports.signupValidator = [
     .withMessage(
       "firstname length must be less than or equal to 10 characters long"
     )
-    .isLength({ min: 4 })
+    .isLength({ min: 1 })
     .withMessage("firstname length must be at least 3 characters long"),
   body("lastname")
     .notEmpty()
@@ -21,7 +19,7 @@ exports.signupValidator = [
     .withMessage(
       "lastname length must be less than or equal to 10 characters long"
     )
-    .isLength({ min: 4 })
+    .isLength({ min: 1 })
     .withMessage("lastname length must be at least 3 characters long"),
   body("email")
     .notEmpty()
@@ -58,5 +56,15 @@ exports.loginValidator = [
   body("password")
     .notEmpty()
     .withMessage("password is not allowed to be empty"),
+  validatorResult,
+];
+
+// Forgot Password Validator
+exports.forgotPasswordValidator = [
+  body("email")
+    .notEmpty()
+    .withMessage("Email is required")
+    .isEmail()
+    .withMessage("Must be a valid email address"),
   validatorResult,
 ];

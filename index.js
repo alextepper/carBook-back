@@ -20,6 +20,15 @@ const authRouters = require("./routes/Auth");
 const categoryRouters = require("./routes/Category");
 const postRouters = require("./routes/Post");
 const commentRouters = require("./routes/Comment");
+const cors = require("cors");
+const morgan = require("morgan");
+
+app.use(
+  cors({
+    origin: "http://localhost:5173", // Allow only this origin
+  })
+);
+app.use(morgan("dev"));
 
 // routes middlware
 app.use("/api/users", userRouters);
