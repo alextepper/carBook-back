@@ -5,18 +5,25 @@ const Car = require("../model/Car");
 // @route   GET /api/cars
 // @access  Public
 exports.getAllCars = asyncHandler(async (req, res, next) => {
-  let query;
+  let query = {};
+  console.log(req.query.isForSale);
 
   // Check if the request has a user parameter
   if (req.query.user) {
-    // Fetch cars that belong to the specified user
-    query = Car.find({ owner: req.query.user }).populate("configuration owner");
-  } else {
-    // Fetch all cars
-    query = Car.find().populate("configuration owner");
+    query.owner = req.query.user;
   }
 
-  const cars = await query;
+  // Check if the request has an isForSale parameter
+  if (req.query.isForSale) {
+    query.isForSale = req.query.isForSale === "true"; // Convert to boolean
+  }
+
+  // Check if the request has a configuration parameter
+  if (req.query.configuration) {
+    query.configuration = req.query.configuration;
+  }
+
+  const cars = await Car.find(query).populate("configuration owner");
 
   res.status(200).json({ success: true, data: cars });
 });
