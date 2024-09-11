@@ -8,8 +8,13 @@ const {
 } = require("../controllers/carController");
 const router = express.Router();
 const { requireSignIn } = require("../middlwares/authMiddlwares");
+const checkCarOwnership = require("../middlwares/ownershipMiddleware");
 
 router.route("/").get(getAllCars).post(requireSignIn, createCar);
-router.route("/:id").get(getCar).put(updateCar).delete(deleteCar);
+router
+  .route("/:id")
+  .get(getCar)
+  .put(requireSignIn, checkCarOwnership, updateCar)
+  .delete(requireSignIn, checkCarOwnership, deleteCar);
 
 module.exports = router;

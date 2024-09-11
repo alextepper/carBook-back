@@ -6,7 +6,6 @@ const Car = require("../model/Car");
 // @access  Public
 exports.getAllCars = asyncHandler(async (req, res, next) => {
   let query = {};
-  console.log(req.query.isForSale);
 
   // Check if the request has a user parameter
   if (req.query.user) {
