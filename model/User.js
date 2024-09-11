@@ -26,6 +26,12 @@ const UserSchema = new mongoose.Schema(
       required: [true, "Email is Required"],
     },
 
+    phoneNumber: {
+      type: String,
+      unique: true,
+      trim: true,
+    },
+
     password: {
       type: String,
       required: [true, "Password is Required"],
@@ -95,6 +101,9 @@ const UserSchema = new mongoose.Schema(
       enum: ["Bronze", "Silver", "Gold"],
       default: "Bronze",
     },
+
+    resetPasswordToken: String,
+    resetPasswordExpires: Date,
   },
   { toJSON: { virtuals: true } },
   { timestamps: true }
@@ -105,8 +114,8 @@ UserSchema.virtual("fullname").get(function () {
   return `${this.firstname} ${this.lastname}`;
 });
 
-// @desc Get intials
-UserSchema.virtual("intials").get(function () {
+// @desc Get initials
+UserSchema.virtual("initials").get(function () {
   return `${this.firstname[0]}${this.lastname[0]}`;
 });
 
@@ -135,7 +144,7 @@ UserSchema.virtual("blockedCount").get(function () {
   return this.blocked.length;
 });
 
-// @desc Last Date  User Created a Post
+// @desc Last Date User Created a Post
 UserSchema.pre("findOne", async function (next) {
   // get the user id
   const userId = this._conditions._id;
@@ -163,12 +172,16 @@ UserSchema.pre("findOne", async function (next) {
       UserSchema.virtual("isInactive").get(function () {
         return true;
       });
-      await User.findByIdAndUpdate(userId, { isBlocked: true }, { new: true });
+      await mongoose
+        .model("User")
+        .findByIdAndUpdate(userId, { isBlocked: true }, { new: true });
     } else {
       UserSchema.virtual("isInactive").get(function () {
         return false;
       });
-      await User.findByIdAndUpdate(userId, { isBlocked: false }, { new: true });
+      await mongoose
+        .model("User")
+        .findByIdAndUpdate(userId, { isBlocked: false }, { new: true });
     }
 
     // --------- Last Active Date Of A User ---------- //
@@ -178,32 +191,26 @@ UserSchema.pre("findOne", async function (next) {
       if (daysAgo <= 0) {
         return "today";
       } else if (daysAgo === 1) {
-        return "yeterday";
+        return "yesterday";
       } else {
         return `${daysAgo} days ago`;
       }
     });
 
-    // ---------  Upgrade User Account  ---------- //
+    // --------- Upgrade User Account  ---------- //
 
     if (posts.length < 10) {
-      await User.findByIdAndUpdate(
-        userId,
-        { userAward: "Bronze" },
-        { new: true }
-      );
+      await mongoose
+        .model("User")
+        .findByIdAndUpdate(userId, { userAward: "Bronze" }, { new: true });
     } else if (posts.length < 20) {
-      await User.findByIdAndUpdate(
-        userId,
-        { userAward: "Silver" },
-        { new: true }
-      );
+      await mongoose
+        .model("User")
+        .findByIdAndUpdate(userId, { userAward: "Silver" }, { new: true });
     } else {
-      await User.findByIdAndUpdate(
-        userId,
-        { userAward: "Gold" },
-        { new: true }
-      );
+      await mongoose
+        .model("User")
+        .findByIdAndUpdate(userId, { userAward: "Gold" }, { new: true });
     }
   }
   next();
@@ -211,6 +218,7 @@ UserSchema.pre("findOne", async function (next) {
 
 // @desc Hash Password
 UserSchema.pre("save", async function (next) {
+  if (!this.isModified("password")) return next();
   const salt = await bcrypt.genSalt();
   this.password = await bcrypt.hash(this.password, salt);
   next();
